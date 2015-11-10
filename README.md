@@ -18,6 +18,6 @@ Colors must not overlap (solution makes use of OS_SEM).
 Set up an interrupt handler that turns on/off the blue led when SW1 is toggled.
 
 ## sw1sw2_interrupts_lab5
-Create two tasks: 1) turns on/off red led when SW1 is pressed; 2) turns on/off green led when SW2 is pressed
+Create two tasks: 1) turns on/off red led when SW1 is pressed; 2) turns on/off green led when SW2 is pressed.
 Use two ISRs to respond to the triggering of the switches and use two distinct semaphores; 
 leds can be on at the same time
