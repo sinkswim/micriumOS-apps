@@ -25,3 +25,8 @@ Set up an interrupt handler that turns on/off the blue led when SW1 is toggled.
 Create two tasks: 1) turns on/off red led when SW1 is pressed; 2) turns on/off green led when SW2 is pressed.
 Use two ISRs to respond to the triggering of the switches and use two distinct semaphores as a signalling system; 
 leds can be on at the same time.
+
+## custom_gpios_lab6.c
+Define two custom GPIO pins: 1) PORTB.23 as digital output; 2) PORTB.9 as digital input
+A task should drive PORTB.23 with a freq. of 5Hz
+Also: calculate the period a positive pulse is present on PORTB.9 and print it on the serial port
