@@ -8,10 +8,10 @@
 *                                         Freescale FRDM-K64F
 *                                          Evaluation Board
 *
-* 
-* 
+*
+*
 * Create two tasks: 1) turns on/off red led when SW1 is pressed; 2) turns on/off green led when SW2 is pressed
-* Use an ISR to respond to the triggering of the switches and use two distinct semaphores; 
+* Use an ISR to respond to the triggering of the switches and use two distinct semaphores;
 * leds can be on at the same time
 *********************************************************************************************************
 */
@@ -71,7 +71,7 @@ static OS_ERR os_err;
 *********************************************************************************************************
 */
 static  void  AppTaskStart (void  *p_arg);
-static  void  AppTaskRed (void  *p_arg);      
+static  void  AppTaskRed (void  *p_arg);
 static  void  AppTaskGreen (void  *p_arg);
 /*
 *********************************************************************************************************
@@ -83,21 +83,22 @@ void SW1_Intr_Handler(void)
 {
   static uint32_t c_ifsr;          // port c interrupt flag status register
   uint32_t c_portBaseAddr = g_portBaseAddr[GPIO_EXTRACT_PORT(kGpioSW1)];
+  uint32_t portPinMask = (1 << GPIO_EXTRACT_PIN(kGpioSW1));
 
   CPU_CRITICAL_ENTER();         // enter critical section (disable interrupts)
 
   OSIntEnter();         // notify to scheduler the beginning of an ISR ("This allows ?C/OS-III to keep track of interrupt nesting")
 
   c_ifsr = PORT_HAL_GetPortIntFlag(c_portBaseAddr);         // get intr flag reg related to port C
-  
-  if( (c_ifsr & 0x40u) ) // check if kGpioSW1 generated the interrupt [pin 6 -> 7th flag (flags start with index 0)]
+
+  if( (c_ifsr & portPinMask) ) // check if kGpioSW1 generated the interrupt [pin 6 -> 7th flag (flags start with index 0)]
   {
       //sem_sw1_post
     OSSemPost(&MySem1,
                          OS_OPT_POST_1 + OS_OPT_POST_NO_SCHED,
                         &os_err);
   }
-  
+
   GPIO_DRV_ClearPinIntFlag( kGpioSW1 );
   CPU_CRITICAL_EXIT();  // renable interrupts
 
@@ -110,14 +111,15 @@ void SW2_Intr_Handler(void)
 {
   static uint32_t a_ifsr;          // port a interrupt flag status register
   uint32_t a_portBaseAddr = g_portBaseAddr[GPIO_EXTRACT_PORT(kGpioSW2)];
+  uint32_t portPinMask = (1 << GPIO_EXTRACT_PIN(kGpioSW2));
 
   CPU_CRITICAL_ENTER();         // enter critical section (disable interrupts)
 
   OSIntEnter();         // notify to scheduler the beginning of an ISR ("This allows ?C/OS-III to keep track of interrupt nesting")
 
   a_ifsr = PORT_HAL_GetPortIntFlag(a_portBaseAddr);             // get intr flag reg related to port A
-  
-  if((a_ifsr & 0x10u))
+
+  if((a_ifsr & portPinMask))
    {
      //sem_sw2_post
     OSSemPost(&MySem2,
@@ -155,11 +157,14 @@ int  main (void)
                 "sem 1",
                  0,
                 &err);
-   
+
    OSSemCreate(&MySem2,           /* Create Semaphore 2         */
                 "sem 2",
                  0,
                 &err);
+
+    INT_SYS_InstallHandler(PORTC_IRQn, SW1_Intr_Handler);       // associate ISR with sw1 intr source
+    INT_SYS_InstallHandler(PORTA_IRQn, SW2_Intr_Handler);       // associate ISR with sw2 intr source
 
     OSTaskCreate(&AppTaskStartTCB,                              /* Create the start task                                */
                  "App Task Start",
@@ -174,7 +179,7 @@ int  main (void)
                   0u,
                  (OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR | OS_OPT_TASK_SAVE_FP),
                  &err);
-    
+
     OSA_Start();                                                /* Start multitasking (i.e. give control to uC/OS-III). */
 
     while (DEF_ON) {                                            /* Should Never Get Here                                */
@@ -185,28 +190,8 @@ int  main (void)
 
 /*
 *********************************************************************************************************
-*                                          STARTUP TASK
-*
-* Description : This is an example of a startup task.  As mentioned in the book's text, you MUST
-*               initialize the ticker only once multitasking has started.
-*
-* Argument(s) : p_arg   is the argument passed to 'App_TaskStart()' by 'OSTaskCreate()'.
-*
-* Return(s)   : none.
-*
-* Caller(s)   : This is a task.
-*
-* Notes       : (1) The first line of code is used to prevent a compiler warning because 'p_arg' is not
-*                   used.  The compiler should not generate any code for this statement.
+*                                          TASKS
 *********************************************************************************************************
-*/
-
-/*
-task
-  sem_pend
-     turn on
-  sem_pend
-      turn off
 */
 
 static  void  AppTaskStart (void *p_arg)
@@ -249,9 +234,6 @@ static  void  AppTaskStart (void *p_arg)
                   0u,
                  (OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR | OS_OPT_TASK_SAVE_FP),
                  &os_err);
-    
-  INT_SYS_InstallHandler(PORTC_IRQn, SW1_Intr_Handler);       // associate ISR with sw1 intr source
-  INT_SYS_InstallHandler(PORTA_IRQn, SW2_Intr_Handler);       // associate ISR with sw2 intr source
 
     while (DEF_TRUE) {                                          /* Task body, always written as an infinite loop.       */
     }
@@ -264,7 +246,7 @@ static  void  AppTaskRed (void *p_arg)
 
     (void)p_arg;
 
-    APP_TRACE_DBG(("listening on kgpiosw1, outputting red led...\n\r"));
+    APP_TRACE_DBG(("listening on kgpiosw1, toggling red led...\n\r"));
 
     while (DEF_TRUE) {                                          /* Task body, always written as an infinite loop.       */
 
@@ -289,7 +271,7 @@ static  void  AppTaskGreen (void *p_arg)
 
     (void)p_arg;
 
-    APP_TRACE_DBG(("listening on kgpiosw2, outputting green led...\n\r"));
+    APP_TRACE_DBG(("listening on kgpiosw2, toggling green led...\n\r"));
 
     while (DEF_TRUE) {                                          /* Task body, always written as an infinite loop.       */
 
