@@ -161,7 +161,7 @@ static void AppTaskStart (void *p_arg)
   OS_ERR err;
   CPU_ERR cpu_err;
   uint32_t value;
-  uint32_t pulse_flag = 0;
+  static uint32_t pulse_flag = 0;
   CPU_TS64 before, after;
   char tmp[80];
     
@@ -197,4 +197,4 @@ static void AppTaskStart (void *p_arg)
     }
 }
 
-*/
+

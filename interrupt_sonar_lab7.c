@@ -172,10 +172,8 @@ static  void  AppTaskStart (void *p_arg)
 
     while (DEF_ON) {
       /* send trigger signals to sensor */
-      GPIO_DRV_ClearPinOutput( outPTB23 );
-      OSTimeDlyHMSM(0u, 0u, 0u, 5u, OS_OPT_TIME_HMSM_STRICT, &err);
-      GPIO_DRV_SetPinOutput( outPTB23 );
-      OSTimeDlyHMSM(0u, 0u, 0u, 100u, OS_OPT_TIME_HMSM_STRICT, &err);
+        GPIO_DRV_TogglePinOutput( outPTB23 );
+        OSTimeDlyHMSM(0u, 0u, 0u, 200u, OS_OPT_TIME_HMSM_STRICT, &err);
 
     }
 
